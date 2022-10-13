@@ -52,4 +52,12 @@ public class GradeController {
         return Result.ok();
     }
 
+
+    @ApiOperation("获取所有Grade信息")
+    @GetMapping("/getGrades")
+    public Result getGrades() {
+        List<Grade> grades = gradeService.getGrades();
+        return Result.ok(grades);
+    }
+
 }
