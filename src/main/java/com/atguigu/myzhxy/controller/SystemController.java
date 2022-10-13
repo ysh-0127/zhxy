@@ -10,6 +10,7 @@ import com.atguigu.myzhxy.service.TeacherService;
 import com.atguigu.myzhxy.util.CreateVerifiCodeImage;
 import com.atguigu.myzhxy.util.JwtHelper;
 import com.atguigu.myzhxy.util.Result;
+import com.atguigu.myzhxy.util.ResultCodeEnum;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -34,6 +36,41 @@ public class SystemController {
     private StudentService studentService;
     @Autowired
     private TeacherService teacherService;
+
+    @GetMapping("/getInfo")
+    public Result getUserInfoByToken(HttpServletRequest request, @RequestHeader("token") String token) {
+        //获取用户请求的token
+        //检查token是否国期
+        boolean isEX = JwtHelper.isExpiration(token);
+        if (isEX) {
+            return Result.build(null, ResultCodeEnum.TOKEN_ERROR);
+        }
+        //解析token,获取用户ID和用户类型
+        Long userId = JwtHelper.getUserId(token);
+        Integer userType = JwtHelper.getUserType(token);
+        //准备map集合存响应的数据
+        Map<String, Object> map = new HashMap<>();
+        switch (userType) {
+            case 1:
+                Admin admin = adminService.getById(userId.intValue());
+                map.put("user", admin);
+                map.put("userType", 1);
+                break;
+            case 2:
+                Student student = studentService.getById(userId.intValue());
+                map.put("user", student);
+                map.put("userType", 2);
+                break;
+            case 3:
+                Teacher teacher = teacherService.getById(userId.intValue());
+                map.put("user", teacher);
+                map.put("userType", 3);
+                break;
+        }
+
+
+        return Result.ok(map);
+    }
 
     @GetMapping("/getVerifiCodeImage")
     public void getVerifiCodeImage(HttpServletRequest request, HttpServletResponse response) {
