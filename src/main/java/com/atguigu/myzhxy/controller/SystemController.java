@@ -12,18 +12,23 @@ import com.atguigu.myzhxy.util.JwtHelper;
 import com.atguigu.myzhxy.util.Result;
 import com.atguigu.myzhxy.util.ResultCodeEnum;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Api(tags = "系统控制器")
 @RestController
@@ -36,6 +41,28 @@ public class SystemController {
     private StudentService studentService;
     @Autowired
     private TeacherService teacherService;
+
+    @ApiOperation("头像上传统一入口")
+    @PostMapping("/headerImgUpload")
+    public Result headerImgUpload(
+            @ApiParam("文件二进制数据") @RequestPart("multipartFile") MultipartFile multipartFile
+    ) {
+
+        //使用UUID随机生成文件名
+        String uuid = UUID.randomUUID().toString().replace("-", "").toLowerCase();
+        //生成新的文件名字
+        String filename = uuid.concat(multipartFile.getOriginalFilename());
+        //生成文件的保存路径(实际生产环境这里会使用真正的文件存储服务器)
+        String portraitPath = "E:/ysh/zhxy/target/classes/public/upload/".concat(filename);
+        //保存文件
+        try {
+            multipartFile.transferTo(new File(portraitPath));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        String headerImg = "upload/" + filename;
+        return Result.ok(headerImg);
+    }
 
     @GetMapping("/getInfo")
     public Result getUserInfoByToken(HttpServletRequest request, @RequestHeader("token") String token) {
